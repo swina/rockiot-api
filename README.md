@@ -15,6 +15,10 @@ IoTiscool-API has a built-in authentication system (that you can extend) based o
 
 All microservices requires authentication and are safely transmitted to client using wss protocol (SSL certificate must be installed on the server).
 
+## Documentation 
+
+Online documentation [https://iotiscool-api.herokuapp.com]
+
 
 ## Get Started (Server)
 
@@ -45,6 +49,7 @@ Getting up and running is as easy as 1, 2, 3.
 
 Client uses websocket protocol and you don't need to add any other external library like axios, jquery, etc.
 Using our transpiled library start using iotiscool-api in 5 minutes.
+
 
 Include our javascript library in your HTML page
 
@@ -114,6 +119,14 @@ Open the browser console and you will get 2 message:
 {msg: "26", date: "2019-10-02T14:35:24.326Z", topic: "sensor/temperature", device: "temperature", user: "NlxWDPkeGV47diTk"}
 
 ```
+## Using the included demo
+
+Included is a HTML/CSS/JS demo available at http://localhost:3030/demo
+
+Before to use it you need to :
+- create a user (for authentication)
+- create a device (used for the demo)
+
 
 ## Testing
 

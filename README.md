@@ -17,7 +17,7 @@ All microservices requires authentication and are safely transmitted to client u
 
 ## Documentation 
 
-Online documentation [https://iotiscool-api.herokuapp.com]
+[Online documentation](https://iotiscool-api.herokuapp.com/docs)
 
 
 ## Get Started (Server)
@@ -44,6 +44,20 @@ Getting up and running is as easy as 1, 2, 3.
     ```
     npm start
     ```
+
+4. Create a user (admin) only for testing purpose
+
+    ```
+    curl POST --data={"email":"admin","password":"password"}
+
+    ```
+5. Change the line 12 of ```src/users/users.hooks.js``` :
+
+    ```
+    create: [ hashPassword('password') , authenticate('jwt') ],
+    ```   
+    in order to prevent to add users without authentication. 
+
 
 ## Client usage (JS)
 

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+    <head>
+            <meta charset="utf-8">
+            <title>IoTiscool-dev: IoT API Client</title>
+            <link rel="stylesheet" href="../style.css" type="text/css">
+            <link rel="stylesheet" id="custom-typekit-css-css" href="https://use.typekit.net/squ6qak.css?ver=5.2.3" type="text/css" media="all"> 
+            <script src="main.js"></script>
+
+    </head>
+    <body>
+        <header>
+            <p class="center-text"><a href="/" class="menu" title="Home">Home</a> <a href="/docs" class="menu" title="API Documentation" target="blank">Docs</a></p>
+        </header>
+        <h1 class="center-text" style="font-size:4rem;margin-bottom:2rem;"><span style="border-bottom:4px solid orange">IoTiscool-dev</span></h1>
+        <h3 class="center-text" style="color:#ababab;">A REST and realtime API Client for IoT.</h3>
+        <div style="width:100%;padding:1rem; margin-top:1rem;" class="center-text">
+            <a href="#" class="button center-text" onclick="subscribeDevice()">Start</a>
+            <a href="#" class="button center-text" onclick="unsubscribeDevice()">Stop</a>
+            <!--<a href="#" class="button center-text" onclick="publishDevice()">Publish Random Value</a>-->
+        </div>
+        
+        <div class="text-center" style="text-align:center;margin-top:2rem;margin:0 auto;">
+            <div style="padding:1rem;background:#1d1b1b;margin:0 auto;color:rgb(211, 166, 20); border-radius:1rem; font-size:4rem;max-width:10rem;min-width:10rem;" id="payload">0</div>
+            <div style="margin:0 auto;"><h3>Garden Temperature °C</h3></div>
+
+            <div style="width:70%;margin:0 auto">
+                <div id="response" class="bar"></div>
+            </div>
+
+            Interval <input type="text" id="interval" name="interval" value="1000" style="width:3rem;padding:4px;" placeholder="milliseconds">ms (min value 100ms)
+            <div id="console" style="padding:4px;text-align:left;font-size:.9rem;background:#222;color:#fafafa;min-height:15rem;max-height:15rem;overflow-y:auto;width:75%;margin:0 auto;margin-top:2rem;">
+                IoTiscool-API => Ready to start ... click on Start!
+            </div>
+            
+            <p style="cursor:pointer;"><small onclick="document.getElementById('console').innerHTML = '';">Clear Logs</small></p>
+        </div>
+        <div style="margin:5rem;">
+            <p>This is a simple demo of the IoTiscool-dev, connected to a IoTiscool-API server.</p>
+            <p>Fake data are created from this demo and sent to an MQTT Broker thru IoTiscool-API server, that reply data received from the broker directly to the client.</p>
+        </div>
+            
+    </body>
+    <link rel="stylesheet" id="custom-typekit-css-css" href="https://use.typekit.net/squ6qak.css?ver=5.2.3" type="text/css" media="all"> 
+  
+  <script>
+    //create app
+    const serverURL = 'http://localhost:3030'
+    const app = new iotiscool.server();
+    //set socket for server url
+    const socket = iotiscool.io( serverURL ,{
+        transports: ['websocket'],
+    });
+    //open socket
+    app.configure(iotiscool.socketio(socket));
+    //set auth JWT to localStorage
+    app.configure(iotiscool.auth({ storage: window.localStorage })); 
+
+    var active = false
+    var logger = document.getElementById('console');
+    const topic = "iotiscool/home/outside"
+    var devices = [];
+    var id;
+    function getDevices(){
+        app.service('assets/devices').find().then ( res => {
+            devices = res.data;
+            console.log ( devices )
+            id = devices[0]._id;
+        }).catch( error => {
+            console.log ( error )
+        })
+    }
+
+    function subscribeDevice(){
+        
+        if ( id && !active ){
+            active = true
+            simulator();
+            app.service('device/' + id + '/subscribe').find().then ( resp => {
+                console.log ( resp )
+                logger.innerHTML += '<br>' + new Date() + " => Realtime data starded" + '<br>';
+            }).catch ( error => {
+                console.log ( error )
+            })
+        }
+    }
+
+
+    function unsubscribeDevice(msg=true){
+        if ( id && active ){
+            active = false
+            stopSimulator();
+            app.service('device/' + id + '/unsubscribe').find().then ( resp => {
+                console.log ( resp )
+                if ( msg ){
+                    logger.innerHTML += new Date() + " => " + resp.msg + '<br>';
+                }
+            }).catch ( error => {
+                console.log ( error )
+            })
+        }
+    }
+
+    function publishDevice(){
+        if ( !active && id ){
+            app.service('device/' + id + '/subscribe').find().then ( resp => {
+                logger.innerHTML += '<br>' + new Date() + " => Publish single payload" + '<br>';
+                app.service('device/' + id + '/publish').find({query:{payload:randomize().toString()}}).then ( res =>{
+                    console.log ( res )
+                }).catch ( err => {
+                    console.log ( err )
+                })
+            }).catch ( error => {
+                console.log ( error )
+            })
+        } else {
+            alert ( "You can't publish at the moment. Click Stop and retry." )
+        }
+    }
+
+    function test_publish(){
+        devices[0].payload = randomize().toString()
+        app.service('topic/publish').create(devices[0]).then ( res =>{
+            return
+        }).catch ( err => {
+            console.log ( err )
+        })
+    }
+
+    app.service('mqtt/realtime').on('payload',function(payload){
+        
+        if ( payload.topic === devices[0].topic ){
+            logger.innerHTML += new Date() + ' => ' + payload.msg + '<br>';
+            document.getElementById('payload').innerText = payload.msg;
+            if ( parseInt(payload.msg) > 40 ){
+                document.getElementById('payload').classList = "red-border";
+            } else {
+                document.getElementById('payload').classList = "green-border";
+            }
+           //document.getElementById('response').style = 'background:red;width:' + payload.msg + "%;";
+        }    
+    }) 
+
+    app.authenticate().then(resp=> { 
+        console.log ( resp ) ; 
+        logger.innerHTML += "<br><span style='color:yellow'>User " + resp.user.email + ' authenticated!</span><br>';
+        getDevices(); 
+    }).catch ( error => {
+        authenticate();
+    })
+
+    function authenticate(){
+        app.authenticate({
+            email: 'admin',
+            password: 'password',
+            strategy: 'local'
+        }).then (  user => {
+            console.log ( user );
+            logger.innerHTML += "User " + user.email + ' authenticated!';
+            getDevices();
+        }).catch ( error => {
+            console.log ( error );
+        })
+    }
+    var repeater, interval
+    function simulator(){
+        interval = parseInt(document.getElementById('interval').value);
+        if ( interval < 100 ){
+            interval = 100
+            document.getElementById('interval').value = 100
+        }
+        repeater = setInterval(() => test_publish(), interval );
+    }
+    
+
+    function stopSimulator(){
+        clearInterval(repeater);
+        
+        
+    }
+    
+    function randomize(minimum=0,maximum=100){
+        return Math.floor(Math.random() * (maximum - minimum + 1)) + minimum;
+    }
+    
+    </script>
+</html>

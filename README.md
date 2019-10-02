@@ -1,3 +1,5 @@
+# IoTiscool-API
+
 ```IoTiscool-API``` is a powerful REST API/Realtime API system to connect to your MQTT Brokers/Devices, get and publish realtime data, manage your devices asset, store realtime data.
 
 This project uses [Feathersjs](http://feathersjs.com). An open source web framework for building modern real-time applications.
@@ -142,7 +144,7 @@ __0.1.0__
 
 ## License
 
-Copyright (c) 2018
+Copyright (c) 2019
 
 Licensed under the [MIT license](LICENSE).
 

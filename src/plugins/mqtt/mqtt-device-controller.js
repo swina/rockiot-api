@@ -53,6 +53,7 @@ function _subscribe( context, device ){
     console.log ( new Date() + ' MQTT Gateway Controller Started');
     startMQTTClient ( context , device );
     subscribeTopic ( context, device );
+    context.app.channels('topic/' + device.topic ).join()
     return 'MQTT Gateway Controller Started for id ' + device._id;
   } else {
     subscribeTopic ( context, device );

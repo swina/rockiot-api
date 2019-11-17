@@ -1,4 +1,5 @@
 /* eslint-disable no-unused-vars */
+
 exports.Topic = class Topic {
   constructor (options) {
     this.options = options || {};

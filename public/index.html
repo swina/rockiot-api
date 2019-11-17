@@ -6,18 +6,135 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="style.css" type="text/css">
     <link rel="stylesheet" id="custom-typekit-css-css" href="https://use.typekit.net/squ6qak.css?ver=5.2.3" type="text/css" media="all"> 
-   
+    <script src="main.js"></script>
   </head>
   <body>
     <main class="container">
-      <h1 class="center-text" style="font-size:8rem;margin-bottom:2rem;"><span style="border-bottom:4px solid orange">IoTiscool</span></h1>
-      <h3 class="center-text" style="color:#ababab;">A REST and realtime API layer for IoT.</h3>
+      <h1 class="center-text" style="font-size:4rem;margin-bottom:2rem;"><span style="border-bottom:4px solid orange">RockIoT Server</span></h1>
+      <!--<h3 class="center-text" style="color:#ababab;">A REST and realtime API layer for IoT.</h3>-->
+      <div class="install-note"></div>
+      <div class="install-form">
+        <label>Username/Email</label>
+        <input type="text" class="install username">
+        <label>Password</label>
+        <input type="password" class="install password" onchange="checkPassword(this)">
+        <label>Confirm Password</label>
+        <input type="password" class="install password-confirm">
+        <small style="margin-bottom:1rem;">
+            Password 8 to 15 characters which contain at least one lowercase letter, one uppercase letter, one numeric digit, and one special character
+        </small>
+        <a href="javascript:void(0)" id="btnForm" onclick="install()" class="button center-text hidden">Save</a>
+      </div>
       <div style="width:100%;padding:1rem; margin-top:1rem;" class="center-text">
+          
           <a href="demo" class="button center-text">Live Client !</a>
       </p>
       <footer>
         <p class="center-text"><a href="docs/" class="menu" title="Feathers Documentation" target="blank">Docs</a></p>
       </footer>
     </main>
+    <script>
+      //create app
+      const serverURL = 'http://localhost:3030'
+      const app = new iotiscool.server();
+      //set socket for server url
+      const socket = iotiscool.io( serverURL ,{
+          transports: ['websocket'],
+      });
+      //open socket
+      app.configure(iotiscool.socketio(socket));
+      //set auth JWT to localStorage
+      app.configure(iotiscool.auth({ storage: window.localStorage })); 
+
+      
+
+      app.service('install').find().then( response=> {
+        if ( response.total === 0 ){
+          app.authenticate().then ( resp => {
+            console.log ( resp )
+            if ( resp.code === 401 ){
+              app.authenticate({
+                email: 'admin',
+                password: 'password',
+                strategy: 'local'
+              }).then ( user => {
+                console.log ( user )
+              }).catch ( error => {
+                console.log ( error )
+              })
+            }
+          }).catch ( err => {
+            console.log ( err )
+          })
+          document.querySelector('.install-note').innerText = 'You have to update the admin account'
+          console.log ( 'you have to change admin password' )
+        }
+      })
+      var error = true;
+
+      function install(){
+        const els = document.querySelectorAll('input')
+        if ( document.querySelectorAll('.username').length < 4 ){
+          error = true;
+          console.log ( 'username at least 4 characters')
+        } else {
+          error = false;
+        }
+        if ( document.querySelector('.password').value != document.querySelector('.password-confirm').value ){
+          console.log ( document.querySelector('.password').value , document.querySelector('.password-confirm').value )
+          console.log ( 'passwords don\'t match' )
+          error = true;
+        }
+        
+      }
+
+      function checkPassword(el){ 
+        var decimal=  /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9])(?!.*\s).{8,15}$/;
+        if(el.value.match(decimal)){
+          document.querySelector('#btnForm').classList.remove('hidden')
+          error = false;
+          return true;
+        } else { 
+          alert('Wrong...! Password doesn\'t match security requirements')
+          error = true;
+          return false;
+        }
+      } 
+    </script>
+    <style>
+    
+    .hidden {
+      display: none;
+    }
+
+    .install-note {
+      background: #ff0000;
+      color: #fff;
+      font-size:1.5rem;
+      padding:1rem;
+      text-align:center;
+      width:40rem;
+      margin:0 auto;
+    }
+
+    .install-form {
+      display:flex;
+      flex-direction: column;
+      width:30rem;
+      margin:0 auto;
+      margin-top:1rem;
+      border:1px solid #eaeaea;
+      border-radius:.4rem;
+      padding:1rem;
+    }
+
+    .install-form > input {
+      border:0;
+      border-radius:.4rem;
+      padding:.5rem;
+      background: #eaeaea;
+      margin-bottom:1rem;
+    }
+    </style>
   </body>
 </html>

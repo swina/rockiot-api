@@ -24,7 +24,11 @@ module.exports = function(app) {
 
       // Add it to the authenticated user channel
       app.channel('authenticated').join(connection);
-
+      //console.log ( connection.user )
+      //if ( !app.channel('topic/' + connection.user._id ).connection ){
+      //  app.channel('topic/' + connection.user._id ).join(connection);
+      //}  
+      console.log ( app.channels )
       // Channels can be named anything and joined on any condition 
       
       // E.g. to send real-time events only to admins use
@@ -45,15 +49,42 @@ module.exports = function(app) {
     // To publish only for a specific event use `app.publish(eventname, () => {})`
 
     //console.log('Publishing all events to all authenticated users. See `channels.js` and https://docs.feathersjs.com/api/channels.html for more information.'); // eslint-disable-line
-
+    
+    if ( hook.params.route.action === 'subscribe' || hook.params.route.action === 'publish'){
+      if ( hook.data.topic.substr(-1) != '#' && hook.data.topic.substr(-1) != '*'){
+        if ( app.channel('topic/' + hook.params.user._id + '/' + hook.data.topic ).connection != client ){
+          console.log ( 'verify channel=>' , app.channel('topic/' + hook.params.user._id + '/' + hook.data.topic ) )
+          app.channel('topic/' + hook.params.user._id + '/' + hook.data.topic ).join(client);
+          //console.log ( 'Joined to channel => ' , hook.data.topic , client);
+          return app.channel('topic/' + hook.params.user._id + '/' + hook.data.topic )
+        }  
+      }
+    }
+    if ( hook.params.route.action === 'unsubscribe' ){
+      if ( hook.data.topic.substr(-1) != '#' && hook.data.topic.substr(-1) != '*'){
+        app.channel('topic/' + hook.params.user._id + '/' + hook.data.topic ).leave(client);
+        return null;
+      }
+    }
+    //console.log ( app.channels )
     // e.g. to publish all service events to all authenticated users use
-    return app.channel('authenticated');
+    //return app.channel('authenticated');
   });
 
+  
+
   app.service('mqtt/realtime').publish('payload',(payload)=>{
-    return [
-      app.channel( 'authenticated' ).filter(()=> client.user._id === payload.user )
-    ];
+    if ( payload.multi ){
+      if ( payload.multi.substr(-1) != '#' && payload.multi.substr(-1) != '*'){
+        return [
+          app.channel( 'topic/' + payload.user + '/' + payload.topic )
+        ];
+      } else {
+        return [
+          app.channel( 'topic/' + payload.user )// + '/' + payload.topic )//.filter(()=>client.user._id === payload.user)
+        ];
+      }
+    }
   });
 
   // Here you can also add service specific event publishers

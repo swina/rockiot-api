@@ -10,21 +10,40 @@ function startMQTTClient( context ) {
 
 /* Subscribe and Listen to topic */
 function subscribeTopic ( context ){
-  context.app.mqtt.subscribe ( context.data.topic );
-
+  context.app.mqtt.subscribe ( context.data.topic , function ( err , granted ){
+    
+    if ( err ){
+      console.log ( 'subscribeTopic=>' , err )
+      payload = {
+        msg: err.toString() ,
+        error: true,
+        date: new Date(),
+        topic: context.data.topic,
+        device: context.data.name,
+        user: context.params.user._id
+      };
+      context.app.service('mqtt/realtime').emit('payload', payload);
+    }
+    if ( granted ){
+      console.log ( granted );
+    }
+  });
+  
   context.app.mqtt.topics.push ( context.data.topic );
   
   context.app.mqtt.on ( 'message' , function ( topic , message ) {
+    console.log ( 'payload => ' , topic , message.toString() )
     msg = message.toString();
     payload = {
       msg: msg ,
       date: new Date(),
       topic: topic,
       device: context.data.name,
-      user: context.params.user._id
+      user: context.params.user._id,
+      multi: context.data.topic
     };
     
-    if ( topic === context.data.topic && context.params.route.action != 'store-start' ){
+    if ( context.params.route.action != 'store-start' ){
       context.app.service('mqtt/realtime').emit('payload', payload);
       // automatically store incoming data if device.store === true 
       if ( context.data.store ){
@@ -52,41 +71,48 @@ function _subscribe( context ){
   if ( !context.app.mqtt ){
     // MQTT Gateway not connected yet
     console.log ( new Date() + ' Gateway Controller Started');
+    console.log(context.app.channels);
     startMQTTClient ( context );
     subscribeTopic ( context );
-    return 'Gateway Controller Started for id ' + context.data.topic;
+    
+    return 'Subscribed to topic ' + context.data.topic;
   } else {
     subscribeTopic ( context );
-    return 'Gateway Controller Started for id ' + context.data.topic;
+    return 'Subscribed to topic ' + context.data.topic;
   }  
 }
 
 /* Unsubscribe Device MQTT Topic */
 function _unsubscribe( context ){
   context.app.mqtt.unsubscribe ( context.data.topic );
+  //context.app.channel('topic/' + context.data.topic ).leave()
   let activeTopics = context.app.mqtt.topics.filter ( topic => {
     return topic != context.data.topic;
   });
   if ( activeTopics.length ){
     context.app.mqtt.topics = activeTopics;
-    return 'Gateway Controller Stopped for id ' + context.data.topic;
+    return 'Unsubscribed from topic ' + context.data.topic;
   } else {
     endMQTTClient(context);
-    console.log ( new Date() + ' Gateway Controller Stopped. No active connections!');
-    return 'Gateway Controller Stopped. No active connections!';
+    console.log ( new Date() + ' MQTT Topic Controller Stopped. No active connections!');
+    return 'MQTT Topic Controller Stopped. No active connections!';
   }
 
 }
 
 /* Publish payload to Device MQTT Client Topic */
 function _publish ( context ){
+  console.log ( 'mqtt app=>' , context.app.mqtt )
   if ( context.app.mqtt ){
-    context.app.mqtt.publish ( context.data.topic , context.data.payload );
-    return 'Payload published for id ' + context.data.topic;
+    _subscribe ( context  );
+    context.app.mqtt.publish ( context.data.topic , context.data.payload.toString());
+    _unsubscribe ( context );
+    return 'Payload published for topic ' + context.data.topic;
   } else {
     _subscribe ( context  );
     context.app.mqtt.publish ( context.data.topic , context.data.payload );
-    return 'Payload published for id ' + context.data.topic;
+    _unsubscribe ( context );
+    return 'Payload published for topic ' + context.data.topic;
   }
 }
 

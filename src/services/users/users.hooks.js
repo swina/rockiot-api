@@ -7,17 +7,17 @@ const install = require('../../hooks/install.hook')
 
 module.exports = {
   before: {
-    all: [authenticate('jwt')],
-    find: [],
-    get: [],
+    all: [],
+    find: [authenticate('jwt')],
+    get: [authenticate('jwt')],
     create: [ hashPassword('password') ],
-    update: [ hashPassword('password')],
-    patch: [ hashPassword('password')],
-    remove: []
+    update: [authenticate('jwt'), hashPassword('password')],
+    patch: [authenticate('jwt'), hashPassword('password')],
+    remove: [authenticate('jwt')]
   },
 
   after: {
-    all: [ 
+    all: [
       // Make sure the password field is never sent to the client
       // Always must be the last hook
       protect('password')

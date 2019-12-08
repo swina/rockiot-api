@@ -75,7 +75,7 @@
 
       function install(){
         const els = document.querySelectorAll('input')
-        if ( document.querySelectorAll('.username').length < 4 ){
+        if ( document.querySelector('.username').length < 4 ){
           error = true;
           console.log ( 'username at least 4 characters')
         } else {

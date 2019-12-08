@@ -45,7 +45,7 @@
   
   <script>
     //create app
-    const serverURL = window.location.slice(0, -1) + ':3030'
+    const serverURL = window.location.origin + ':3030'
     const app = new iotiscool.server();
     //set socket for server url
     const socket = iotiscool.io( serverURL ,{

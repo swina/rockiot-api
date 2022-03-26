@@ -1,0 +1,16 @@
+# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
+version: v1.22.1
+ignore: {}
+# patches apply the minimum changes required to fix a vulnerability
+patch:
+  SNYK-JS-LODASH-567746:
+    - '@feathersjs/authentication-oauth > lodash':
+        patched: '2022-03-26T01:02:19.941Z'
+    - slack-notify > lodash:
+        patched: '2022-03-26T01:02:19.941Z'
+    - '@feathersjs/authentication-oauth > @feathersjs/express > lodash':
+        patched: '2022-03-26T01:02:19.941Z'
+    - winston > async > lodash:
+        patched: '2022-03-26T01:02:19.941Z'
+    - '@feathersjs/authentication-oauth > @feathersjs/authentication > @feathersjs/transport-commons > lodash':
+        patched: '2022-03-26T01:02:19.941Z'

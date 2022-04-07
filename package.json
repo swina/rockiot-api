@@ -47,7 +47,7 @@
     "nedb": "^1.8.0",
     "serve-favicon": "^2.5.0",
     "slack-notify": "^0.1.7",
-    "winston": "^3.2.1"
+    "winston": "^3.3.0"
   },
   "devDependencies": {
     "axios": "^0.19.0",

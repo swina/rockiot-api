@@ -43,10 +43,10 @@
     "feathers-memory": "^4.0.1",
     "feathers-nedb": "^5.0.2",
     "helmet": "^3.21.1",
-    "mqtt": "^3.0.0",
+    "mqtt": "^4.2.7",
     "nedb": "^1.8.0",
     "serve-favicon": "^2.5.0",
-    "slack-notify": "^0.1.7",
+    "slack-notify": "^2.0.0",
     "winston": "^3.2.1"
   },
   "devDependencies": {
